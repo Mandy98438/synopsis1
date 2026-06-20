@@ -164,3 +164,26 @@ export function NoLinksEmpty() {
     </div>
   );
 }
+
+// ── Server-safe empty state (uses Link not onClick) ──
+import Link from "next/link";
+
+export function NoKardsEmptyServer() {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+      <div className="w-14 h-14 rounded-2xl bg-[#111] border border-[#1e1e1e] flex items-center justify-center text-2xl mb-4">
+        ✦
+      </div>
+      <p className="text-sm font-medium text-white mb-1">No Kards yet</p>
+      <p className="text-xs text-[#555] max-w-xs mb-5">
+        Create your first digital identity card and start sharing it instantly.
+      </p>
+      <Link
+        href="/dashboard/new"
+        className="px-4 py-2 bg-[#E07020] text-white text-xs font-medium rounded-xl hover:bg-[#c8601a] transition-colors"
+      >
+        Create your first Kard
+      </Link>
+    </div>
+  );
+}

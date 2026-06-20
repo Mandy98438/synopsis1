@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────
 // KARD — Dashboard Page
 // FIX: user.cards → user.kards (correct Prisma relation name)
-// FIX: Phase 9 skeletons + empty states now wired in
+// FIX: NoKardsEmpty now redirects to /dashboard/new
 // ─────────────────────────────────────────────
 
 import { redirect } from "next/navigation";
@@ -10,7 +10,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { DashboardShell } from "@/components/dashboard/shell";
 import { CardBuilder } from "@/components/dashboard/card-builder";
-import { NoKardsEmpty } from "@/components/dashboard-skeleton";
+import { NoKardsEmptyServer } from "@/components/dashboard-skeleton";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -19,7 +19,7 @@ export default async function DashboardPage() {
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     include: {
-      kards: {                          // FIX: was "cards" — relation is "kards"
+      kards: {
         include: { links: true, analytics: true },
         orderBy: { createdAt: "desc" },
       },
@@ -36,8 +36,7 @@ export default async function DashboardPage() {
       {kard ? (
         <CardBuilder kard={kard} verification={user.verification} />
       ) : (
-        // FIX: Wire in Phase 9 empty state (was showing plain EmptyState with no action)
-        <NoKardsEmpty onCreateClick={() => {}} />
+        <NoKardsEmptyServer />
       )}
     </DashboardShell>
   );

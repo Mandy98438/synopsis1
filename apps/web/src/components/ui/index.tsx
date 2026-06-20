@@ -1,10 +1,12 @@
 "use client";
 // ─────────────────────────────────────────────
 // KARD — UI Primitives
-// Button, Input, Textarea, Badge, Spinner, Toast
+// FIX: Removed duplicate Toast/Spinner definitions
+//      Added 'prefix' prop to Input
+//      Added 'xs' size to Spinner
 // ─────────────────────────────────────────────
 
-import { forwardRef, createContext, useContext, useState, useEffect } from "react";
+import { forwardRef, createContext, useContext, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 
 // ── Button ────────────────────────────────────
@@ -53,10 +55,11 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   hint?: string;
+  prefix?: string; // FIX: Added prefix prop (used for kard.io/ display)
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, hint, className, id, ...props }, ref) => {
+  ({ label, error, hint, prefix, className, id, ...props }, ref) => {
     const inputId = id ?? label?.toLowerCase().replace(/\s/g, "-");
 
     return (
@@ -66,18 +69,27 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {label}
           </label>
         )}
-        <input
-          ref={ref}
-          id={inputId}
-          className={cn(
-            "w-full px-3.5 py-2.5 rounded-xl bg-[#0f0f0f] border text-sm text-white placeholder:text-[#333] outline-none transition-colors",
-            error
-              ? "border-red-500/40 focus:border-red-500/70"
-              : "border-[#1e1e1e] focus:border-[#333]",
-            className
+        <div className="relative flex items-center">
+          {prefix && (
+            <span className="absolute left-3.5 text-sm text-[#444] pointer-events-none select-none">
+              {prefix}
+            </span>
           )}
-          {...props}
-        />
+          <input
+            ref={ref}
+            id={inputId}
+            className={cn(
+              "w-full px-3.5 py-2.5 rounded-xl bg-[#0f0f0f] border text-sm text-white placeholder:text-[#333] outline-none transition-colors",
+              prefix && "pl-[calc(3.5rem_*_var(--prefix-len,1))]",
+              error
+                ? "border-red-500/40 focus:border-red-500/70"
+                : "border-[#1e1e1e] focus:border-[#333]",
+              className
+            )}
+            style={prefix ? { paddingLeft: `${prefix.length * 7.5 + 14}px` } : undefined}
+            {...props}
+          />
+        </div>
         {error && <p className="text-xs text-red-400">{error}</p>}
         {hint && !error && <p className="text-[11px] text-[#444]">{hint}</p>}
       </div>
@@ -152,8 +164,9 @@ export function Badge({ variant = "default", children, className }: BadgeProps) 
 }
 
 // ── Spinner ───────────────────────────────────
-export function Spinner({ size = "md", className }: { size?: "sm" | "md" | "lg"; className?: string }) {
-  const sizes = { sm: "w-3 h-3", md: "w-4 h-4", lg: "w-6 h-6" };
+// FIX: Added 'xs' size used in CardBuilder
+export function Spinner({ size = "md", className }: { size?: "xs" | "sm" | "md" | "lg"; className?: string }) {
+  const sizes = { xs: "w-2.5 h-2.5", sm: "w-3 h-3", md: "w-4 h-4", lg: "w-6 h-6" };
   return (
     <svg
       className={cn("animate-spin text-current", sizes[size], className)}
@@ -183,25 +196,25 @@ const ToastContext = createContext<{
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
-  const toast = (message: string, type: ToastType = "success") => {
+  const toast = useCallback((message: string, type: ToastType = "success") => {
     const id = Math.random().toString(36).slice(2);
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 3500);
-  };
+  }, []);
 
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="fixed bottom-5 right-5 flex flex-col gap-2 z-50 pointer-events-none">
+      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 flex flex-col gap-2 z-[100] pointer-events-none">
         {toasts.map((t) => (
           <div
             key={t.id}
             className={cn(
-              "px-4 py-3 rounded-xl text-sm font-medium border animate-slide-up pointer-events-auto shadow-xl",
-              t.type === "success" && "bg-[#0f1f0f] text-[#4CAF50] border-[#1a3a1a]",
-              t.type === "error" && "bg-[#1f0f0f] text-red-400 border-[#3a1a1a]",
+              "px-4 py-3 rounded-xl text-sm font-medium border shadow-xl pointer-events-auto toast-enter",
+              t.type === "success" && "bg-[#0f2a0f] text-[#4CAF50] border-[#1a4a1a]",
+              t.type === "error" && "bg-[#2a0f0f] text-red-400 border-[#4a1a1a]",
               t.type === "info" && "bg-[#141414] text-[#aaa] border-[#222]"
             )}
           >
