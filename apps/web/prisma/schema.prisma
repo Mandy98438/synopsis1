@@ -1,0 +1,237 @@
+// ─────────────────────────────────────────────
+// KARD — Prisma Schema
+// Database: PostgreSQL via Supabase
+// ─────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ── User ──────────────────────────────────────
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  plan          Plan      @default(FREE)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts     Account[]
+  sessions     Session[]
+  kards        Kard[]
+  verification Verification?
+
+  @@index([email])
+}
+
+// ── NextAuth Account ──────────────────────────
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String  // linkedin, github, google, twitter
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+// ── NextAuth Session ──────────────────────────
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ── Verification Tokens (email) ───────────────
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ── Verification Status ───────────────────────
+model Verification {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  level            Int      @default(0) // 0-3
+  linkedinVerified Boolean  @default(false)
+  githubVerified   Boolean  @default(false)
+  googleVerified   Boolean  @default(false)
+  twitterVerified  Boolean  @default(false)
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ── Kard (the card itself) ────────────────────
+model Kard {
+  id        String    @id @default(cuid())
+  userId    String
+  username  String    @unique  // kard.io/username
+  shortCode String    @unique  // KRD-XXXX
+  mode      CardMode  @default(PROFESSIONAL)
+  theme     Theme     @default(DARK)
+  active    Boolean   @default(true)
+
+  // Identity
+  firstName String
+  lastName  String
+  headline  String
+  bio       String?   @db.Text
+  avatarUrl String?
+
+  // Work
+  company   String?
+
+  // Contact (only shown in personal mode)
+  email     String?
+  phone     String?
+  location  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  links     KardLink[]
+  analytics KardAnalytics?
+  reports   Report[]
+
+  @@index([userId])
+  @@index([shortCode])
+  @@index([username])
+}
+
+// ── Kard Links ────────────────────────────────
+model KardLink {
+  id       String       @id @default(cuid())
+  kardId   String
+  type     PlatformType
+  label    String
+  url      String
+  verified Boolean      @default(false)
+  order    Int          @default(0)
+
+  kard       Kard           @relation(fields: [kardId], references: [id], onDelete: Cascade)
+  analytics  LinkAnalytics?
+
+  @@index([kardId])
+}
+
+// ── Analytics: Card views (owner only) ────────
+model KardAnalytics {
+  id         String   @id @default(cuid())
+  kardId     String   @unique
+  totalViews Int      @default(0)
+  updatedAt  DateTime @updatedAt
+
+  kard       Kard         @relation(fields: [kardId], references: [id], onDelete: Cascade)
+  dailyViews DailyView[]
+}
+
+model DailyView {
+  id          String   @id @default(cuid())
+  analyticsId String
+  date        DateTime @db.Date
+  views       Int      @default(0)
+
+  analytics KardAnalytics @relation(fields: [analyticsId], references: [id], onDelete: Cascade)
+
+  @@unique([analyticsId, date])
+  @@index([analyticsId])
+}
+
+// ── Analytics: Link clicks (owner only) ───────
+model LinkAnalytics {
+  id          String @id @default(cuid())
+  linkId      String @unique
+  totalClicks Int    @default(0)
+
+  link KardLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+}
+
+// ── Abuse Reports ─────────────────────────────
+model Report {
+  id        String       @id @default(cuid())
+  kardId    String
+  reason    ReportReason
+  details   String?      @db.Text
+  status    ReportStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+
+  kard Kard @relation(fields: [kardId], references: [id], onDelete: Cascade)
+
+  @@index([kardId])
+  @@index([status])
+}
+
+// ── Reserved Usernames ────────────────────────
+model ReservedUsername {
+  username  String   @id
+  reason    String
+  createdAt DateTime @default(now())
+}
+
+// ── Enums ─────────────────────────────────────
+enum Plan {
+  FREE
+  PRO
+}
+
+enum CardMode {
+  MINIMAL
+  PROFESSIONAL
+  PERSONAL
+}
+
+enum Theme {
+  DARK
+  LIGHT
+}
+
+enum PlatformType {
+  LINKEDIN
+  GITHUB
+  TWITTER
+  INSTAGRAM
+  CUSTOM
+}
+
+enum ReportReason {
+  IMPERSONATION
+  FAKE_IDENTITY
+  SPAM
+  INAPPROPRIATE
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
+}

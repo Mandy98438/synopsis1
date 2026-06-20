@@ -1,0 +1,164 @@
+/* ─────────────────────────────────────────────
+   KARD — Phase 10: Micro-animations + Transitions
+   Add this to your globals.css or import in layout
+   ───────────────────────────────────────────── */
+
+/* ── Page enter animation ────────────────────── */
+@keyframes kard-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes kard-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes kard-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes kard-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes kard-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ── Utility classes ─────────────────────────── */
+.animate-fade-up {
+  animation: kard-fade-up 0.3s ease forwards;
+}
+
+.animate-fade-in {
+  animation: kard-fade-in 0.25s ease forwards;
+}
+
+.animate-scale-in {
+  animation: kard-scale-in 0.25s ease forwards;
+}
+
+.animate-slide-right {
+  animation: kard-slide-in-right 0.25s ease forwards;
+}
+
+/* ── Staggered children (use on parent) ─────── */
+/* children get .stagger-child class */
+.stagger-children .stagger-child:nth-child(1) { animation-delay: 0ms; }
+.stagger-children .stagger-child:nth-child(2) { animation-delay: 60ms; }
+.stagger-children .stagger-child:nth-child(3) { animation-delay: 120ms; }
+.stagger-children .stagger-child:nth-child(4) { animation-delay: 180ms; }
+.stagger-children .stagger-child:nth-child(5) { animation-delay: 240ms; }
+
+/* ── Loading skeleton shimmer ───────────────── */
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    #1a1a1a 25%,
+    #222 50%,
+    #1a1a1a 75%
+  );
+  background-size: 200% 100%;
+  animation: kard-shimmer 1.5s infinite;
+}
+
+/* ── Button press micro-animation ───────────── */
+.btn-press {
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+.btn-press:active {
+  transform: scale(0.97);
+  opacity: 0.85;
+}
+
+/* ── Card hover lift ────────────────────────── */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Link click ripple ──────────────────────── */
+.link-ripple {
+  position: relative;
+  overflow: hidden;
+}
+.link-ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(224, 112, 32, 0.08);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.link-ripple:active::after {
+  opacity: 1;
+}
+
+/* ── Verification badge pulse ───────────────── */
+@keyframes badge-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(224, 112, 32, 0.3); }
+  50%       { box-shadow: 0 0 0 6px rgba(224, 112, 32, 0); }
+}
+.badge-verified {
+  animation: badge-pulse 2.5s ease infinite;
+}
+
+/* ── Toast slide in ─────────────────────────── */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+  }
+}
+.toast-enter { animation: toast-in 0.2s ease forwards; }
+.toast-exit  { animation: toast-out 0.15s ease forwards; }
+
+/* ── Respect reduced motion ─────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
