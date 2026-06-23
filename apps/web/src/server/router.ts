@@ -152,8 +152,16 @@ const kardRouter = t.router({
 
       return ctx.prisma.kard.create({
         data: {
-          ...kardData,
-          user: { connect: { id: userId } },
+          username: kardData.username,
+          firstName: kardData.firstName,
+          lastName: kardData.lastName,
+          headline: kardData.headline,
+          bio: kardData.bio,
+          company: kardData.company,
+          email: kardData.email,
+          phone: kardData.phone,
+          location: kardData.location,
+          userId,
           shortCode,
           mode: input.mode.toUpperCase() as any,
           theme: input.theme.toUpperCase() as any,
