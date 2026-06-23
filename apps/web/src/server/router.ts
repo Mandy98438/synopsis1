@@ -150,29 +150,17 @@ const kardRouter = t.router({
       const shortCode = await generateShortCode();
       const { links, ...kardData } = input;
 
-      return ctx.prisma.kard.create({
+      const { links, username, firstName, lastName, headline, bio, company, email, phone, location, mode, theme } = input;
+
+return ctx.prisma.kard.create({
   data: {
-    username: input.username!,
-    firstName: kardData.firstName ?? "",
-    lastName: kardData.lastName ?? "",
-    headline: kardData.headline ?? "",
-    bio: kardData.bio ?? null,
-    company: kardData.company ?? null,
-    email: kardData.email ?? null,
-    phone: kardData.phone ?? null,
-    location: kardData.location ?? null,
-    userId,
+    user: { connect: { id: userId } },
+    username,            
+    firstName, lastName, headline, bio, company, email, phone, location,
     shortCode,
-    mode: input.mode.toUpperCase() as any,
-    theme: input.theme.toUpperCase() as any,
-    links: {
-      create: links.map((link, i) => ({
-        label: link.label,
-        url: link.url,
-        type: link.type.toUpperCase() as any,
-        order: i,
-      })),
-    },
+    mode: mode.toUpperCase() as any,
+    theme: theme.toUpperCase() as any,
+    links: { create: links.map((link, i) => ({ ... })) },
     analytics: { create: {} },
   },
   include: { links: true },
