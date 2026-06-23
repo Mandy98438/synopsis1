@@ -151,33 +151,32 @@ const kardRouter = t.router({
       const { links, ...kardData } = input;
 
       return ctx.prisma.kard.create({
-        data: {
-          username: kardData.username,
-          firstName: kardData.firstName,
-          lastName: kardData.lastName,
-          headline: kardData.headline,
-          bio: kardData.bio,
-          company: kardData.company,
-          email: kardData.email,
-          phone: kardData.phone,
-          location: kardData.location,
-          userId,
-          shortCode,
-          mode: input.mode.toUpperCase() as any,
-          theme: input.theme.toUpperCase() as any,
-          links: {
-            create: links.map((link, i) => ({
-              label: link.label as string,
-              url: link.url as string,
-              type: link.type.toUpperCase() as any,
-              order: i,
-            })),
-          },
-          analytics: { create: {} },
-        },
-        include: { links: true },
-      });
-    }),
+  data: {
+    username: input.username!,
+    firstName: kardData.firstName ?? "",
+    lastName: kardData.lastName ?? "",
+    headline: kardData.headline ?? "",
+    bio: kardData.bio ?? null,
+    company: kardData.company ?? null,
+    email: kardData.email ?? null,
+    phone: kardData.phone ?? null,
+    location: kardData.location ?? null,
+    userId,
+    shortCode,
+    mode: input.mode.toUpperCase() as any,
+    theme: input.theme.toUpperCase() as any,
+    links: {
+      create: links.map((link, i) => ({
+        label: link.label,
+        url: link.url,
+        type: link.type.toUpperCase() as any,
+        order: i,
+      })),
+    },
+    analytics: { create: {} },
+  },
+  include: { links: true },
+});
 
   // Update card
   update: protectedProcedure
